@@ -12,6 +12,7 @@ class Student extends Model
         'gender',
         'class',
         'registration_id',
+        'profile_picture',
     ];
 
 

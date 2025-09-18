@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateStudent extends CreateRecord
 {
     protected static string $resource = StudentResource::class;
+
+    protected function afterCreate(): void
+    {
+        $this->record->subjects()->sync($this->form->getState()['subjects'] ?? []);
+    }
 }

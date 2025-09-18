@@ -82,7 +82,7 @@
                                     {{-- Marks/Grades --}}
                                     @foreach(array_keys($row['grades']) as $subjectName)
                                         <td class="px-4 py-3 text-sm text-center text-gray-700 border-l border-gray-200">
-                                            {{ $row['marks'][$subjectName] ?? '-' }}
+                                         {{ $row['marks'][$subjectName]['average'] ?? '-' }}
                                         </td>
                                         <td class="px-4 py-3 text-sm text-center text-gray-700 font-medium">
                                             {{ $row['grades'][$subjectName] ?? '-' }}

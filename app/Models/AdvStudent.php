@@ -17,6 +17,7 @@ class AdvStudent extends Model
         'stream',
         'class',
         'registration_id',
+        'profile_picture',
     ];
 
 

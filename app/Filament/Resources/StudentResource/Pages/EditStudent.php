@@ -16,4 +16,9 @@ class EditStudent extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function afterSave(): void
+    {
+        $this->record->subjects()->sync($this->form->getState()['subjects'] ?? []);
+    }
 }

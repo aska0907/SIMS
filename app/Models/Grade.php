@@ -28,4 +28,14 @@ class Grade extends Model
     {
         return $this->belongsTo(Subject::class);
     }
+    // Accessor for overall
+    public function getOverallAttribute()
+    {
+        return collect([
+            $this->test1,
+            $this->test2,
+            $this->mid_term,
+            $this->terminal,
+        ])->filter()->avg();
+    }
 }

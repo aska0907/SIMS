@@ -6,12 +6,14 @@ use App\Filament\Resources\AdvStudentResource\Pages;
 use App\Models\AdvStudent;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\ImageColumn;
 
 class AdvStudentResource extends Resource
 {
@@ -26,6 +28,15 @@ class AdvStudentResource extends Resource
     {
         return $form
             ->schema([
+                FileUpload::make('profile_picture')
+                    ->label('Profile Picture')
+                    ->image()
+                    ->directory('adv-students/profile-pictures')
+                    ->disk('public')
+                    ->imagePreviewHeight('150')
+                    ->downloadable()
+                    ->nullable(),
+
                 TextInput::make('full_name')
                     ->label('Full Name')
                     ->required()
@@ -63,6 +74,12 @@ class AdvStudentResource extends Resource
     {
         return $table
             ->columns([
+                ImageColumn::make('profile_picture')
+                    ->label('Photo')
+                    ->circular()
+                    ->getStateUsing(fn ($record) => $record->profile_picture ? asset('storage/' . $record->profile_picture) : null)
+                    ->size(50),
+
                 TextColumn::make('full_name')
                     ->label('Full Name')
                     ->sortable()

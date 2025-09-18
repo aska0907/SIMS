@@ -6,6 +6,7 @@ use App\Models\AdvGrade;
 use App\Models\Subject;
 use App\Models\AdvStudent;
 use App\Models\Combination;
+use App\Models\School;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
@@ -65,12 +66,13 @@ class AdvResults extends Page implements Forms\Contracts\HasForms
                     ->options(Combination::pluck('name', 'id'))
                     ->searchable()
                     ->live(),
+
                 Forms\Components\Select::make('student_id')
-    ->label('Student (optional)')
-    ->options(AdvStudent::pluck('full_name', 'id'))
-    ->searchable()
-    ->placeholder('All Students')
-    ->live(),
+                    ->label('Student (optional)')
+                    ->options(AdvStudent::pluck('full_name', 'id'))
+                    ->searchable()
+                    ->placeholder('All Students')
+                    ->live(),
 
                 Forms\Components\CheckboxList::make('components')
                     ->label('Include Marks From')
@@ -125,31 +127,59 @@ class AdvResults extends Page implements Forms\Contracts\HasForms
             ->pluck('subject_id')
             ->toArray();
 
+        // Define max marks for each component (example)
+        $componentMax = [
+            'test1' => 20,
+            'test2' => 20,
+            'mid_term' => 30,
+            'terminal' => 30,
+        ];
+
         foreach ($grades->groupBy('adv_student_id') as $studentId => $studentGrades) {
             $student = $studentGrades->first()->student;
             $subjectMarks = [];
             $subjectGrades = [];
 
+            $overallTotal = 0;
+            $overallCount = 0;
+
             foreach ($studentGrades as $grade) {
                 $subjectName = $grade->subject->subject_name;
                 $total = 0;
                 $count = 0;
+                $componentMarks = [];
 
                 foreach ($this->components as $comp) {
                     $value = $grade->$comp;
+                    $componentMarks[$comp] = $value ?? 0;
+
                     if (!is_null($value)) {
                         $total += $value;
                         $count++;
                     }
                 }
+           
+               $outOf = count($this->components) * 100;
 
-                // If no marks, treat as 0
                 $avg = $count > 0 ? round($total / $count, 2) : 0;
                 $subGrade = $avg > 0 ? $this->getGrade($avg) : 'F';
 
-                $subjectMarks[$subjectName] = $avg;
+                $subjectMarks[$subjectName] = [
+                    'components' => $componentMarks,
+                    'total'      => $total,
+                    'out_of'     => $outOf,
+                    'average'    => $avg,
+                ];
+
                 $subjectGrades[$subjectName] = $subGrade;
+
+                $overallTotal += $avg;
+                $overallCount++;
             }
+
+            // Overall average per student (wastani)
+            $overallAverage = $overallCount > 0 ? round($overallTotal / $overallCount, 2) : 0;
+            $overallOutOf = count($subjectMarks) * 100;
 
             // Map only core subjects grades to points
             $pointsMap = ['A'=>1,'B'=>2,'C'=>3,'D'=>4,'E'=>5,'S'=>6,'F'=>7];
@@ -169,23 +199,27 @@ class AdvResults extends Page implements Forms\Contracts\HasForms
             };
 
             $results->push([
-                'student_name' => $student->full_name ?? $student->name ?? 'Unknown',
-                'class' => $studentGrades->first()->class,
-                'marks' => $subjectMarks,
-                'grades' => $subjectGrades,
-                'totalPoints' => $totalCorePoints,
-                'division' => $division,
+                'student_name'    => $student->full_name ?? $student->name ?? 'Unknown',
+                'class'           => $studentGrades->first()->class,
+                'marks'           => $subjectMarks,   // includes components + average + total + out_of
+                'grades'          => $subjectGrades,
+                'overallOutOf'    => $overallOutOf,
+                'overallAverage'  => $overallAverage, // wastani
+                'totalPoints'     => $totalCorePoints,
+                'division'        => $division,
+                'profile_picture' => $student->profile_picture ?? null,
             ]);
         }
 
         // Sort by totalCorePoints ascending
         $sorted = $results->sortBy('totalPoints')->values();
 
-        // Assign rank
+        // Assign rank and out_of
         $ranked = [];
         $prevPoints = null;
         $currentRank = 0;
         $position = 0;
+        $totalStudents = $sorted->count();
 
         foreach ($sorted as $row) {
             $position++;
@@ -194,41 +228,43 @@ class AdvResults extends Page implements Forms\Contracts\HasForms
                 $prevPoints = $row['totalPoints'];
             }
             $row['rank'] = $currentRank;
+            $row['out_of'] = $totalStudents;
             $ranked[] = $row;
         }
 
         return collect($ranked);
     }
 
+    public function exportReportBookPdf()
+    {
+        $results = $this->getResults();
 
-     public function exportReportBookPdf()
-{
-    $results = $this->getResults();
+        if ($results->isEmpty()) {
+            Notification::make()
+                ->title('No results to export for report book.')
+                ->warning()
+                ->send();
+            return;
+        }
+        $school = School::find(1); // ✅ school with ID 1
+        // Get subjects for table headers
+        $subjects = array_keys($results->first()['grades']);
 
-    if ($results->isEmpty()) {
-        Notification::make()
-            ->title('No results to export for report book.')
-            ->warning()
-            ->send();
-        return;
+        $pdf = Pdf::loadView('filament.pages.adv-results-report-book', [
+            'results'     => $results,
+            'semester'    => $this->semester,
+            'class'       => $this->class,
+            'combination' => $this->combination_id ? Combination::find($this->combination_id)->name : 'All',
+            'subjects'    => $subjects,
+            'components'  => $this->components,
+            'school'      => $school, // Pass school data
+
+        ])->setPaper('a4', 'portrait');
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, 'report-book-' . now()->format('Y-m-d') . '.pdf');
     }
-
-    // Get subjects for table headers
-    $subjects = array_keys($results->first()['grades']);
-
-    $pdf = Pdf::loadView('filament.pages.adv-results-report-book', [
-        'results' => $results,
-        'semester' => $this->semester,
-        'class' => $this->class,
-        'combination' => $this->combination_id ? Combination::find($this->combination_id)->name : 'All',
-        'subjects' => $subjects,
-        'components' => $this->components,
-    ])->setPaper('a4', 'portrait'); // Portrait for report book
-
-    return response()->streamDownload(function () use ($pdf) {
-        echo $pdf->output();
-    }, 'report-book-' . now()->format('Y-m-d') . '.pdf');
-}
 
     public function exportPdf()
     {
@@ -247,12 +283,12 @@ class AdvResults extends Page implements Forms\Contracts\HasForms
         $combinationName = $this->combination_id ? Combination::find($this->combination_id)->name : 'All';
 
         $pdf = Pdf::loadView('filament.pages.adv-results-pdf', [
-            'results' => $results,
-            'semester' => $this->semester,
-            'class' => $this->class,
+            'results'     => $results,
+            'semester'    => $this->semester,
+            'class'       => $this->class,
             'combination' => $combinationName,
-            'subjects' => $subjects,
-            'components' => $this->components,
+            'subjects'    => $subjects,
+            'components'  => $this->components,
         ]);
 
         return response()->streamDownload(function () use ($pdf) {

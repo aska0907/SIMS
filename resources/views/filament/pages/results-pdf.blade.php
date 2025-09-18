@@ -2,320 +2,248 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Academic Results Report</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary-color: #1a56db;
-            --secondary-color: #0d9488;
-            --accent-color: #e11d48;
-            --light-bg: #f9fafb;
-            --border-color: #e5e7eb;
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --division-I: #059669;
-            --division-II: #2563eb;
-            --division-III: #d97706;
-            --division-IV: #6b7280;
-            --division-0: #dc2626;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            line-height: 1.6;
-            color: var(--text-primary);
-            background-color: #fff;
-            padding: 1.5rem;
-        }
-        
-        .report-container {
-            max-width: 100%;
-            margin: 0 auto;
-            background: white;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        
-        .report-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 1.75rem 2rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .report-header::before {
-            content: "";
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 200%;
-            background: rgba(255, 255, 255, 0.1);
-            transform: rotate(-15deg);
-            pointer-events: none;
-        }
-        
-        .report-header h1 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            position: relative;
-        }
-        
-        .report-header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            position: relative;
-        }
-        
-        .report-meta {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-            padding: 1.25rem 1.5rem;
-            background-color: var(--light-bg);
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-        }
-        
-        .meta-item i {
-            color: var(--secondary-color);
-            font-size: 1.1rem;
-        }
-        
-        .meta-item strong {
-            color: var(--text-primary);
-            margin-right: 0.25rem;
-        }
-        
-        .report-content {
-            padding: 1.5rem;
-            overflow-x: auto;
-        }
-        
-        .results-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: 0.85rem;
-            margin-top: 1rem;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .results-table th {
-            background-color: #f8fafc;
-            padding: 0.9rem 0.75rem;
-            text-align: center;
-            font-weight: 600;
-            color: var(--text-primary);
-            border-bottom: 2px solid var(--border-color);
-            position: sticky;
-            top: 0;
-        }
-        
-        .results-table td {
-            padding: 0.85rem 0.75rem;
-            text-align: center;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .results-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .results-table tbody tr:hover {
-            background-color: #f1f5f9;
-        }
-        
-        .subject-header {
-            background-color: #f1f5f9;
-            font-weight: 600;
-        }
-        
-        .rank-1 {
-            background-color: #fffbeb;
-            position: relative;
-            font-weight: 600;
-        }
-        
-        .rank-1::before {
-            content: "🥇";
-            position: absolute;
-            left: 0.5rem;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        
-        .rank-2 {
-            background-color: #f9fafb;
-            position: relative;
-            font-weight: 600;
-        }
-        
-        .rank-2::before {
-            content: "🥈";
-            position: absolute;
-            left: 0.5rem;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        
-        .division-I { 
-            color: var(--division-I); 
-            font-weight: 700; 
-        }
-        
-        .division-II { 
-            color: var(--division-II); 
-            font-weight: 600; 
-        }
-        
-        .division-III { 
-            color: var(--division-III); 
-            font-weight: 600; 
-        }
-        
-        .division-IV { 
-            color: var(--division-IV); 
-        }
-        
-        .division-0 { 
-            color: var(--division-0); 
-            font-weight: 600; 
-        }
-        
-        .points-cell {
-            font-weight: 600;
-            background-color: #f0f9ff;
-        }
-        
-        .division-cell {
-            font-weight: 600;
-        }
-        
-        .report-footer {
-            padding: 1.25rem 1.5rem;
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            border-top: 1px solid var(--border-color);
-            background-color: var(--light-bg);
-        }
-        
-        @media (max-width: 768px) {
-            body {
-                padding: 1rem;
-            }
-            
-            .report-header {
-                padding: 1.25rem 1rem;
-            }
-            
-            .report-header h1 {
-                font-size: 1.5rem;
-            }
-            
-            .report-meta {
-                flex-direction: column;
-                gap: 0.75rem;
-                padding: 1rem;
-            }
-            
-            .results-table {
-                font-size: 0.75rem;
-            }
-            
-            .results-table th,
-            .results-table td {
-                padding: 0.6rem 0.4rem;
-            }
-        }
-        
-        @media print {
-            body {
-                padding: 0;
-            }
-            
-            .report-container {
-                box-shadow: none;
-            }
-        }
+/* ==== RESET & PRINT-SAFE DEFAULTS ==== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Times New Roman", Georgia, serif; /* 👈 More formal for print */
+    line-height: 1.5;
+    color: #000;
+    background: #fff;
+    padding: 0;
+    font-size: 11pt; /* 👈 Standard print size */
+}
+
+/* ==== PRINT STYLES ==== */
+@media print {
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .report-container {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* ==== COLORS (PRINT-SAFE) ==== */
+:root {
+    --primary-color: #2E8B57;       /* SeaGreen — official, calm */
+    --secondary-color: #2c5aa0;     /* Deep blue */
+    --light-bg: #f5f5f5;
+    --border-color: #333;
+    --text-primary: #000;
+    --text-secondary: #555;
+    --division-I: #006400;          /* Dark Green */
+    --division-II: #000080;         /* Navy */
+    --division-III: #8B4513;        /* SaddleBrown */
+    --division-IV: #444;
+    --division-0: #8B0000;          /* DarkRed */
+}
+
+/* ==== CONTAINER ==== */
+.report-container {
+    max-width: 100%;
+    margin: 0 auto;
+    background: white;
+    border: 1px solid #ccc;
+    page-break-inside: avoid;
+}
+
+/* ==== HEADER ==== */
+.report-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 18px 20px;
+    text-align: center;
+}
+
+.report-header h1 {
+    font-size: 18pt;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    margin: 0 0 6px 0;
+    font-family: "Georgia", serif;
+}
+
+.report-header p {
+    font-size: 11pt;
+    font-weight: normal;
+    margin: 0;
+    opacity: 0.95;
+}
+
+/* ==== META INFO ==== */
+.report-meta {
+    display: table;
+    width: 100%;
+    background: #f9f9f9;
+    border-top: 2px solid var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+    font-size: 10pt;
+}
+
+.report-meta-row {
+    display: table-row;
+}
+
+.meta-cell {
+    display: table-cell;
+    padding: 8px 12px;
+    border-right: 1px solid #eee;
+    vertical-align: top;
+}
+
+.meta-cell:last-child {
+    border-right: none;
+}
+
+.meta-cell strong {
+    color: #000;
+    font-weight: bold;
+}
+
+/* ==== TABLE ==== */
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+    margin: 15px 0 0 0;
+    page-break-inside: avoid;
+}
+
+.results-table th,
+.results-table td {
+    padding: 8px 6px;
+    text-align: center;
+    border: 1px solid #333;
+    vertical-align: middle;
+}
+
+.results-table th {
+    background: #e6e6e6;
+    font-weight: bold;
+    color: #000;
+    font-size: 10pt;
+}
+
+.results-table thead tr.subject-header th {
+    background: #d9d9d9;
+    font-weight: bold;
+    font-size: 9pt;
+    padding: 6px 4px;
+}
+
+.results-table tbody tr.rank-1 td {
+    background: #e6ffe6; /* Light green for 1st rank */
+    font-weight: bold;
+}
+
+.results-table tbody tr.rank-2 td {
+    background: #f0f0ff; /* Light blue for 2nd rank */
+    font-weight: bold;
+}
+
+.division-I { color: var(--division-I); font-weight: bold; }
+.division-II { color: var(--division-II); font-weight: bold; }
+.division-III { color: var(--division-III); font-weight: bold; }
+.division-IV { color: var(--division-IV); }
+.division-0 { color: var(--division-0); font-weight: bold; }
+
+.points-cell {
+    font-weight: bold;
+    background: #ffffe0; /* Light yellow */
+}
+
+.division-cell {
+    font-weight: bold;
+}
+
+/* Student name left-aligned */
+.results-table td:nth-child(3) {
+    text-align: left;
+    padding-left: 10px;
+    font-weight: 500;
+}
+
+/* ==== FOOTER ==== */
+.report-footer {
+    padding: 15px 20px;
+    text-align: center;
+    font-size: 9pt;
+    color: #555;
+    border-top: 1px solid #ccc;
+    margin-top: 20px;
+}
+
+.report-footer p {
+    margin: 0;
+}
     </style>
 </head>
 <body>
     <div class="report-container">
+        <!-- HEADER -->
         <div class="report-header">
-            <h1>Academic Results Report</h1>
+            <h1>ACADEMIC RESULTS REPORT</h1>
             <p>{{ $semester }}</p>
         </div>
-        
+
+        <!-- META -->
         <div class="report-meta">
-            <div class="meta-item">
-                <i class="fas fa-users"></i>
-                <strong>Class:</strong> {{ $class === 'All' ? 'All Classes' : $class }}
-            </div>
-            <div class="meta-item">
-                <i class="fas fa-chart-bar"></i>
-                <strong>Included Marks:</strong> {{ implode(', ', array_map('ucfirst', $components)) }}
-            </div>
-            <div class="meta-item">
-                <i class="fas fa-calendar-alt"></i>
-                <strong>Generated On:</strong> {{ now()->format('M d, Y') }}
+            <div class="report-meta-row">
+                <div class="meta-cell">
+                    <strong>CLASS:</strong> {{ $class === 'All' ? 'ALL CLASSES' : $class }}
+                </div>
+                <div class="meta-cell">
+                    <strong>INCLUDED MARKS:</strong> {{ implode(', ', array_map('ucfirst', $components)) }}
+                </div>
+                <div class="meta-cell">
+                    <strong>GENERATED ON:</strong> {{ now()->format('F d, Y') }}
+                </div>
             </div>
         </div>
-        
+
+        <!-- TABLE -->
         <div class="report-content">
             <table class="results-table">
                 <thead>
                     <tr>
-                        <th>Class</th>
-                        <th>Rank</th>
-                        <th>Student</th>
+                        <th>CLASS</th>
+                        <th>RANK</th>
+                        <th>STUDENT NAME</th>
                         @foreach($subjects as $subjectName)
-                            <th colspan="2">{{ $subjectName }}</th>
+                            <th colspan="2">{{ strtoupper($subjectName) }}</th>
                         @endforeach
-                        <th>Points (Best 7)</th>
-                        <th>Division</th>
+                        <th>POINTS<br>(BEST 7)</th>
+                        <th>DIVISION</th>
                     </tr>
                     <tr class="subject-header">
                         <th colspan="3"></th>
                         @foreach($subjects as $subjectName)
-                            <th>Score</th>
-                            <th>Grade</th>
+                            <th>SCORE</th>
+                            <th>GRADE</th>
                         @endforeach
                         <th colspan="2"></th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($results as $row)
-                        <tr class="row-rank-{{ $row['rank'] == 1 ? '1' : ($row['rank'] == 2 ? '2' : '') }}">
+                        <tr class="{{ $row['rank'] == 1 ? 'rank-1' : ($row['rank'] == 2 ? 'rank-2' : '') }}">
                             <td>{{ $row['class'] }}</td>
                             <td>{{ $row['rank'] }}</td>
-                            <td style="text-align: left;">{{ $row['student_name'] }}</td>
+                            <td>{{ $row['student_name'] }}</td>
                             @foreach($subjects as $subjectName)
-                                <td>{{ $row['marks'][$subjectName] ?? '-' }}</td>
+                                <td>{{ $row['marks'][$subjectName]['average'] ?? '-' }}</td>
                                 <td>{{ $row['grades'][$subjectName] ?? '-' }}</td>
                             @endforeach
                             <td class="points-cell">{{ $row['totalPoints'] }}</td>
@@ -327,9 +255,10 @@
                 </tbody>
             </table>
         </div>
-        
+
+        <!-- FOOTER -->
         <div class="report-footer">
-            <p>Official Academic Report • Generated by School Management System</p>
+            <p>OFFICIAL ACADEMIC REPORT — GENERATED BY SCHOOL MANAGEMENT SYSTEM</p>
         </div>
     </div>
 </body>

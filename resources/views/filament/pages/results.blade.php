@@ -50,21 +50,24 @@
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Class</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Rank</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Student</th>
-
-                                {{-- Dynamic subjects header (only assigned subjects) --}}
+                                {{-- Dynamic subjects header --}}
                                 @foreach(array_keys($this->getResults()->first()['grades']) as $subjectName)
-                                    <th colspan="2" class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider border-l border-gray-200">
+                                    <th colspan="{{ count($this->components) + 2 }}" class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider border-l border-gray-200">
                                         {{ $subjectName }}
                                     </th>
                                 @endforeach
-
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-l border-gray-200">Points (Best 7)</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Division</th>
                             </tr>
                             <tr>
                                 <th colspan="3"></th>
                                 @foreach(array_keys($this->getResults()->first()['grades']) as $subjectName)
-                                    <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">Score</th>
+                                    @foreach($this->components as $component)
+                                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
+                                            {{ ucwords(str_replace('_', ' ', $component)) }}
+                                        </th>
+                                    @endforeach
+                                    <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Average</th>
                                     <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
                                 @endforeach
                                 <th colspan="2"></th>
@@ -84,17 +87,20 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $row['student_name'] }}</td>
-
                                     {{-- Dynamic subjects marks/grades per student --}}
                                     @foreach(array_keys($row['grades']) as $subjectName)
-                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-center text-gray-700 border-l border-gray-200">
-                                            {{ $row['marks'][$subjectName] ?? '-' }}
+                                        @foreach($this->components as $component)
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-center text-gray-700 border-l border-gray-200">
+                                                {{ $row['marks'][$subjectName][$component] ?? '-' }}
+                                            </td>
+                                        @endforeach
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-center text-gray-700">
+                                            {{ $row['marks'][$subjectName]['average'] ?? '-' }}
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-center text-gray-700 font-medium">
                                             {{ $row['grades'][$subjectName] ?? '-' }}
                                         </td>
                                     @endforeach
-
                                     <td class="px-4 py-3 whitespace-nowrap text-sm font-bold text-gray-900 border-l border-gray-200">
                                         {{ $row['totalPoints'] }}
                                     </td>

@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Grade;
 use App\Models\Subject;
+use App\Models\School;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
@@ -111,34 +112,47 @@ class Results extends Page implements Forms\Contracts\HasForms
                 $subjectMarks = [];
                 $subjectGrades = [];
 
-                // Only loop through subjects assigned to this student
                 $studentSubjects = $student->subjects->pluck('id', 'subject_name'); // [subject_name => id]
 
                 foreach ($studentSubjects as $subjectName => $subjectId) {
                     $grade = $studentGrades->firstWhere('subject_id', $subjectId);
 
+                    $marksForSubject = [];
+                    $outOf = 0;
                     if (!$grade) {
+                        foreach ($this->components as $comp) {
+                            $marksForSubject[$comp] = null;
+                            // You may want to set max marks for each component if you have them
+                            // $outOf += 0;
+                        }
                         $avg = null;
                         $subGrade = 'F';
+                        $total = null;
                     } else {
                         $total = 0;
                         $count = 0;
                         foreach ($this->components as $comp) {
                             $value = $grade->$comp;
+                            $marksForSubject[$comp] = $value;
                             if (!is_null($value)) {
                                 $total += $value;
                                 $count++;
                             }
+                            // If you have max marks per component, add here, e.g.:
+                            // $outOf += $grade->getMaxForComponent($comp);
+                            $outOf += 100; // <-- Set your max per component here (e.g., 100)
                         }
                         $avg = $count > 0 ? round($total / $count, 2) : 0;
                         $subGrade = $this->getGrade($avg);
                     }
+                    $marksForSubject['total'] = $total;
+                    $marksForSubject['out_of'] = $outOf;
+                    $marksForSubject['average'] = $avg;
 
-                    $subjectMarks[$subjectName] = $avg;
+                    $subjectMarks[$subjectName] = $marksForSubject;
                     $subjectGrades[$subjectName] = $subGrade;
                 }
 
-                // Map grades to points
                 $subjectPoints = array_map(fn($g) => match($g) {
                     'A' => 1,
                     'B' => 2,
@@ -148,9 +162,12 @@ class Results extends Page implements Forms\Contracts\HasForms
                     default => 5,
                 }, $subjectGrades);
 
-                // Best 7 points
                 $best7Points = collect($subjectPoints)->sort()->take(7);
                 $totalPoints = $best7Points->sum();
+
+                // Calculate overall average for the student
+                $allAverages = collect($subjectMarks)->pluck('average')->filter(fn($v) => !is_null($v));
+                $overallAverage = $allAverages->count() > 0 ? round($allAverages->avg(), 2) : null;
 
                 $division = match(true) {
                     $totalPoints >= 7 && $totalPoints <= 17 => 'Division I',
@@ -166,26 +183,34 @@ class Results extends Page implements Forms\Contracts\HasForms
                     'marks' => $subjectMarks,
                     'grades' => $subjectGrades,
                     'totalPoints' => $totalPoints,
+                    'points' => $totalPoints, // <-- add this
                     'division' => $division,
+                    'average' => $overallAverage, // <-- add this
+                    'rank' => 0,
+                    'profile_picture' => $student->profile_picture, // ✅ include student photo
                 ];
             });
 
-            // Sort students by totalPoints ascending
-            $sorted = $perStudent->sortBy('totalPoints')->values()->all();
+            // This sorts by totalPoints (old):
+            // $sorted = $perStudent->sortBy('totalPoints')->values()->all();
 
-            // Assign rank per class
+            // Change to sort by average (descending, so highest average is rank 1):
+            $sorted = $perStudent->sortByDesc('average')->values()->all();
+
             $ranked = [];
-            $prevPoints = null;
+            $prevAverage = null;
             $currentRank = 0;
             $position = 0;
+            $totalStudents = count($sorted);
 
             foreach ($sorted as $row) {
                 $position++;
-                if ($prevPoints === null || $row['totalPoints'] > $prevPoints) {
+                if ($prevAverage === null || $row['average'] < $prevAverage) {
                     $currentRank = $position;
-                    $prevPoints = $row['totalPoints'];
+                    $prevAverage = $row['average'];
                 }
                 $row['rank'] = $currentRank;
+                $row['out_of'] = $totalStudents;
                 $ranked[] = $row;
             }
 
@@ -195,38 +220,10 @@ class Results extends Page implements Forms\Contracts\HasForms
         return $results;
     }
 
-
-     public function exportReportBook()
-{
-    $results = $this->getResults();
-
-    if ($results->isEmpty()) {
-        Notification::make()
-            ->title('No results to export.')
-            ->warning()
-            ->send();
-        return;
-    }
-
-    // Generate PDF per student report book
-    $pdf = Pdf::loadView('filament.pages.results-report-pdf', [
-        'results'   => $results,
-        'semester'  => $this->semester,
-        'class'     => $this->class,
-        'components'=> $this->components,
-    ]);
-
-    return response()->streamDownload(function () use ($pdf) {
-        echo $pdf->output();
-    }, 'olevel-report-book-' . now()->format('Y-m-d') . '.pdf');
-}
-  
-    public function exportPdf()
+    public function exportReportBook()
     {
-        // Use the getResults method to get the data for the report
         $results = $this->getResults();
 
-        // Ensure there are results before attempting to export
         if ($results->isEmpty()) {
             Notification::make()
                 ->title('No results to export.')
@@ -235,20 +232,48 @@ class Results extends Page implements Forms\Contracts\HasForms
             return;
         }
 
-        // Get the subjects for the table headers
-        $subjects = array_keys($results->first()['grades']);
+        $school = School::find(1); // ✅ school with ID 1
 
-        // Generate the PDF from a Blade view
-        $pdf = Pdf::loadView('filament.pages.results-pdf', [
+        // Ensure only selected components are passed and used in the view
+        $selectedComponents = array_filter($this->components);
+
+        $pdf = Pdf::loadView('filament.pages.results-report-pdf', [
             'results' => $results,
             'semester' => $this->semester,
             'class' => $this->class,
-            'subjects' => $subjects,
-            'components' => $this->components
+            'components' => $selectedComponents, // Pass only selected components
+            'school' => $school,
         ]);
 
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
-        }, 'academic-results-' . str_replace(' ', '-', strtolower($this->semester)) . '-' . str_replace(' ', '-', strtolower($this->class)) . '.pdf');
+        }, 'olevel-report-book-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function exportPdf()
+    {
+        $results = $this->getResults();
+
+        if ($results->isEmpty()) {
+            Notification::make()
+                ->title('No results to export.')
+                ->warning()
+                ->send();
+            return;
+        }
+
+        $selectedComponents = array_filter($this->components);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('filament.pages.results-pdf', [
+            'results' => $results,
+            'semester' => $this->semester,
+            'class' => $this->class,
+            'components' => $selectedComponents,
+            'subjects' => $this->subjects->pluck('subject_name'),
+        ]);
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, 'results-summary-' . now()->format('Y-m-d') . '.pdf');
     }
 }

@@ -18,9 +18,8 @@ class CombinationResource extends Resource
     protected static ?string $model = Combination::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+  protected static ?string $navigationGroup = 'Advaced level Management';
     protected static ?string $navigationLabel = 'Combinations';
-    protected static ?string $pluralLabel = 'Combinations';
-
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form->schema([

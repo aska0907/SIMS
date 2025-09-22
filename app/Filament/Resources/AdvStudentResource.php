@@ -20,9 +20,9 @@ class AdvStudentResource extends Resource
     protected static ?string $model = AdvStudent::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    
+  protected static ?string $navigationGroup = 'Advaced level Management';
     protected static ?string $navigationLabel = 'Advanced Students';
-    protected static ?string $pluralLabel = 'Advanced Students';
-    protected static ?string $modelLabel = 'Advanced Student';
 
     public static function form(Form $form): Form
     {

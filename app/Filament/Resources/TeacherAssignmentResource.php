@@ -19,19 +19,24 @@ class TeacherAssignmentResource extends Resource
     protected static ?string $model = TeacherSubjectClass::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
-    protected static ?string $navigationLabel = 'Teacher Assignments';
-    protected static ?string $modelLabel = 'Teacher Assignment';
+    protected static ?string $navigationGroup = 'Subject Management';
+    protected static ?string $navigationLabel = 'Teacher Assignment(O-Level)';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Select::make('user_id')
-                    ->label('Teacher')
-                    ->options(User::all()->pluck('name', 'id'))
-                    ->searchable()
-                    ->preload()
-                    ->required(),
+ Select::make('user_id')
+    ->label('Teacher')
+    ->options(
+        User::query()
+            ->where('role', 'teacher')
+            ->pluck('name', 'id')
+    )
+    ->searchable()
+    ->preload()
+    ->required(),
+
 
                 Select::make('subject_id')
                     ->label('Subject')

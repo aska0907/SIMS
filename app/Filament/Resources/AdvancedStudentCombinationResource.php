@@ -17,8 +17,8 @@ class AdvancedStudentCombinationResource extends Resource
     protected static ?string $model = AdvancedStudentCombination::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationGroup = 'Academics';
-    protected static ?string $navigationLabel = 'Student Combinations';
+  protected static ?string $navigationGroup = 'Advaced level Management';
+    protected static ?string $navigationLabel = 'combination Assignments';
 
     public static function form(Form $form): Form
     {

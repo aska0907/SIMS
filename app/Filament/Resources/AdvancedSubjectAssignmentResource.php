@@ -15,8 +15,8 @@ class AdvancedSubjectAssignmentResource extends Resource
     protected static ?string $model = AdvancedSubjectAssignment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
-    protected static ?string $navigationGroup = 'Academics';
-    protected static ?string $navigationLabel = 'Advanced Subject Assignments';
+    protected static ?string $navigationGroup = 'Subject Management';
+    protected static ?string $navigationLabel = 'Teacher Assignment(A-Level)';
 
     public static function form(Form $form): Form
     {

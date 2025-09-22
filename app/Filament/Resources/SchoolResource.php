@@ -19,9 +19,8 @@ class SchoolResource extends Resource
     protected static ?string $model = School::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
-    protected static ?string $navigationLabel = 'Schools';
-    protected static ?string $pluralLabel = 'Schools';
-    protected static ?string $modelLabel = 'School';
+   protected static ?string $navigationGroup = 'School Management';
+    protected static ?string $navigationLabel = 'My School';
 
     public static function form(Form $form): Form
     {
